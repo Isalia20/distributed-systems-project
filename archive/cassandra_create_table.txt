@@ -1,0 +1,10 @@
+CREATE KEYSPACE IF NOT EXISTS sensor_data WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 1 };
+
+USE sensor_data;
+
+CREATE TABLE IF NOT EXISTS temperature_readings (
+    ts timestamp,
+    station_id text,
+    temperature float,
+    PRIMARY KEY (station_id, ts)
+);
