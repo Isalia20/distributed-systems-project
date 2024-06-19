@@ -7,6 +7,7 @@ from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-streaming-kafka-0-10_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.0 pyspark-shell'
 KAFKA_ADDRESS = "localhost:9093"
 KAFKA_TOPIC_NAME = "sensor_topic"
+# KAFKA_TOPIC_NAME = "monitoring"
 
 
 spark = SparkSession.builder \
@@ -25,6 +26,7 @@ kafka_df = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", KAFKA_ADDRESS) \
     .option("subscribe", KAFKA_TOPIC_NAME) \
+    .option("startingOffsets", "earliest") \
     .load()
 
 value_df = kafka_df.selectExpr("CAST(value AS STRING)")
@@ -72,9 +74,15 @@ def process_batch(batch_df, batch_id):
     count_errors_by_day(df)
     count_errors_by_day_err_type(df)
 
-query = df.writeStream \
-    .foreachBatch(process_batch) \
-    .trigger(processingTime="10 seconds") \
-    .start()
+while True:
+    try:
+        query = df.writeStream \
+            .foreachBatch(process_batch) \
+            .trigger(processingTime="5 seconds") \
+            .start()
 
-query.awaitTermination()
+        query.awaitTermination()
+    except KeyboardInterrupt:
+        break
+    finally:
+        print("error occurred")
