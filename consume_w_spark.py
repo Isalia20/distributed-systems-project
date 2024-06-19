@@ -6,8 +6,8 @@ from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 
 os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-streaming-kafka-0-10_2.12:3.2.0,org.apache.spark:spark-sql-kafka-0-10_2.12:3.2.0 pyspark-shell'
 KAFKA_ADDRESS = "localhost:9093"
-KAFKA_TOPIC_NAME = "sensor_topic"
-# KAFKA_TOPIC_NAME = "monitoring"
+# KAFKA_TOPIC_NAME = "sensor_topic"
+KAFKA_TOPIC_NAME = "monitoring"
 
 
 spark = SparkSession.builder \
@@ -27,6 +27,7 @@ kafka_df = spark.readStream \
     .option("kafka.bootstrap.servers", KAFKA_ADDRESS) \
     .option("subscribe", KAFKA_TOPIC_NAME) \
     .option("startingOffsets", "earliest") \
+    .option("failOnDataLoss", "false") \
     .load()
 
 value_df = kafka_df.selectExpr("CAST(value AS STRING)")
@@ -78,8 +79,8 @@ while True:
     try:
         query = df.writeStream \
             .foreachBatch(process_batch) \
-            .trigger(processingTime="5 minutes") \
-            .option("checkpointLocation", "checkpoint_dir") \
+            .trigger(processingTime="5 seconds") \
+            .option("checkpointLocation", "checkpoint_dir_new") \
             .start()
 
         query.awaitTermination()

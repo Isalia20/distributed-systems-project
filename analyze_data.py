@@ -1,7 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import TimestampType
-from archive.consume_data import consume_events
 
 
 CASSANDRA_HOST = "127.0.0.1"
@@ -26,7 +25,7 @@ df = spark.read \
     .load()
 print(df.columns)
 
-df = df.withColumn("ts", F.col("ts").cast(TimestampType()))
+df = df.withColumn("ts", F.col("ts").cast(TimestampType())).cache()
 
 # Step 1
 # Filter the last 24 hours
