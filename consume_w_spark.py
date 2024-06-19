@@ -78,7 +78,8 @@ while True:
     try:
         query = df.writeStream \
             .foreachBatch(process_batch) \
-            .trigger(processingTime="5 seconds") \
+            .trigger(processingTime="5 minutes") \
+            .option("checkpointLocation", "checkpoint_dir") \
             .start()
 
         query.awaitTermination()
